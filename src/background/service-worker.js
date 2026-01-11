@@ -64,17 +64,26 @@ class InstantNavService {
 
     async _handlePredictions(links, tabId) {
         const profile = this.contextManager.getProfile();
+        let statsUpdated = false;
 
         for (const link of links) {
             if (link.score >= profile.prerenderThreshold && profile.maxPrerender > 0) {
                 await this.prefetcher.prerender(link.url, tabId);
+                this.stats.totalPrefetches++;
+                statsUpdated = true;
             } else if (link.score >= profile.prefetchThreshold && profile.maxPrefetch > 0) {
                 await this.prefetcher.prefetch(link.url, tabId);
+                this.stats.totalPrefetches++;
+                statsUpdated = true;
             } else if (link.score >= profile.preconnectThreshold) {
                 await this.prefetcher.preconnect(link.url);
             } else if (link.score >= 30) {
                 await this.prefetcher.dnsPrefetch(link.url);
             }
+        }
+
+        if (statsUpdated) {
+            this._saveStats();
         }
     }
 

@@ -148,6 +148,11 @@ class LinkPredictor {
         // Notify prefetcher with top candidates
         this._notifyPrefetcher(results.slice(0, 5));
 
+        // Update visual feedback
+        if (window.instantNavFeedback) {
+            window.instantNavFeedback.updateFromPredictions(results);
+        }
+
         return results;
     }
 
