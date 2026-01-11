@@ -10,9 +10,9 @@ class DashboardController {
 
     async init() {
         this.setupNavigation();
-        await this.loadStats();
-        this.initCharts();
         this.setupSettings();
+        this.initCharts();
+        await this.loadStats();
     }
 
     setupNavigation() {
@@ -235,4 +235,7 @@ class DashboardController {
 }
 
 // Initialize
-new DashboardController();
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+    new DashboardController();
+});

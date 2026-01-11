@@ -8,10 +8,10 @@ class PopupController {
     }
 
     async init() {
+        this.setupEventListeners();
         await this.loadStats();
         await this.loadMode();
         await this.loadCurrentSite();
-        this.setupEventListeners();
     }
 
     async loadStats() {
@@ -119,4 +119,6 @@ class PopupController {
 }
 
 // Initialize
-new PopupController();
+document.addEventListener('DOMContentLoaded', () => {
+    new PopupController();
+});
