@@ -3,6 +3,7 @@
  */
 
 import Chart from 'chart.js/auto';
+import { learningDB } from '../storage/learning-db.js';
 
 class DashboardController {
     constructor() {
@@ -70,16 +71,23 @@ class DashboardController {
         }
     }
 
-    initCharts() {
+    async initCharts() {
+        const stats = await learningDB.getDailyStats(7);
+        const labels = stats.map(s => {
+            const d = new Date(s.date);
+            return d.toLocaleDateString('fr-FR', { weekday: 'short' });
+        });
+        const data = stats.map(s => Math.round(s.timeSaved / 1000)); // Seconds
+
         // Time saved chart
         const timeCtx = document.getElementById('time-chart').getContext('2d');
         this.charts.time = new Chart(timeCtx, {
             type: 'line',
             data: {
-                labels: this.getLast7Days(),
+                labels: labels.reverse(),
                 datasets: [{
                     label: 'Temps gagné (s)',
-                    data: this.generateMockData(7, 5, 40),
+                    data: data.reverse(),
                     borderColor: 'rgb(168, 85, 247)',
                     backgroundColor: 'rgba(168, 85, 247, 0.1)',
                     fill: true,
@@ -89,34 +97,27 @@ class DashboardController {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
-                },
+                plugins: { legend: { display: false } },
                 scales: {
-                    x: {
-                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
-                        ticks: { color: '#9ca3af' }
-                    },
-                    y: {
-                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
-                        ticks: { color: '#9ca3af' }
-                    }
+                    x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#9ca3af' } },
+                    y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#9ca3af' } }
                 }
             }
         });
 
         // Precision chart (doughnut)
+        const total = stats.reduce((acc, val) => acc + val.prefetches, 0);
+        const successful = stats.reduce((acc, val) => acc + val.successfulPredictions, 0);
+        const wasted = total - successful;
+
         const precisionCtx = document.getElementById('precision-chart').getContext('2d');
         this.charts.precision = new Chart(precisionCtx, {
             type: 'doughnut',
             data: {
-                labels: ['Réussies', 'Gaspillées'],
+                labels: ['Utiles', 'Gaspillées'],
                 datasets: [{
-                    data: [94, 6],
-                    backgroundColor: [
-                        'rgb(34, 197, 94)',
-                        'rgba(255, 255, 255, 0.1)'
-                    ],
+                    data: total > 0 ? [successful, wasted] : [0, 1], // Placeholder if empty
+                    backgroundColor: ['rgb(34, 197, 94)', 'rgba(255, 255, 255, 0.1)'],
                     borderWidth: 0
                 }]
             },
@@ -125,33 +126,29 @@ class DashboardController {
                 maintainAspectRatio: false,
                 cutout: '70%',
                 plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: { color: '#9ca3af' }
-                    }
+                    legend: { position: 'bottom', labels: { color: '#9ca3af' } }
                 }
             }
         });
 
         // Top sites
-        this.renderTopSites();
+        await this.renderTopSites();
     }
 
-    renderTopSites() {
+    async renderTopSites() {
+        const sites = await learningDB.getFrequentDomains(5);
         const container = document.getElementById('top-sites');
-        const mockSites = [
-            { domain: 'github.com', time: '45s' },
-            { domain: 'reddit.com', time: '32s' },
-            { domain: 'twitter.com', time: '28s' },
-            { domain: 'youtube.com', time: '21s' },
-            { domain: 'google.com', time: '18s' }
-        ];
 
-        container.innerHTML = mockSites.map((site, i) => `
+        if (sites.length === 0) {
+            container.innerHTML = '<div style="padding: 20px; text-align: center; color: #666;">Aucune donnée pour le moment</div>';
+            return;
+        }
+
+        container.innerHTML = sites.map((site, i) => `
       <div class="site-item">
         <span class="site-rank">#${i + 1}</span>
         <span class="site-domain">${site.domain}</span>
-        <span class="site-time">${site.time}</span>
+        <span class="site-time">${this.formatTime(site.avgLoadTime)} (avg)</span>
       </div>
     `).join('');
     }
