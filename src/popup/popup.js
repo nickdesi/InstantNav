@@ -118,27 +118,9 @@ class PopupController {
     }
 }
 
-// Debug Error Handler
-function showError(msg) {
-    const el = document.getElementById('debug-error');
-    if (el) {
-        el.style.display = 'block';
-        el.textContent = 'ERR: ' + msg;
-    }
-}
-
-window.onerror = function (msg, url, line, col, error) {
-    showError(`${msg} (${line}:${col})`);
-    return false;
-};
-
 // Initialize
 function init() {
-    try {
-        new PopupController();
-    } catch (e) {
-        showError(e.message);
-    }
+    new PopupController();
 }
 
 if (document.readyState === 'loading') {
