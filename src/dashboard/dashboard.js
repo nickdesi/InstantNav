@@ -2,6 +2,8 @@
  * InstantNav - Dashboard Controller
  */
 
+import Chart from 'chart.js/auto';
+
 class DashboardController {
     constructor() {
         this.charts = {};
@@ -236,6 +238,12 @@ class DashboardController {
 
 // Initialize
 // Initialize
-document.addEventListener('DOMContentLoaded', () => {
+function init() {
     new DashboardController();
-});
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+} else {
+    init();
+}

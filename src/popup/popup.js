@@ -119,6 +119,12 @@ class PopupController {
 }
 
 // Initialize
-document.addEventListener('DOMContentLoaded', () => {
+function init() {
     new PopupController();
-});
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+} else {
+    init();
+}
