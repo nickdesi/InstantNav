@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>InstantNav</title>
   <link rel="stylesheet" href="popup.css">
 </head>
+
 <body>
   <div class="popup-container">
     <!-- Header -->
@@ -29,7 +31,7 @@
           <span class="stat-value" id="time-saved">0.0s</span>
         </div>
       </div>
-      
+
       <div class="stats-row">
         <div class="stat-card">
           <span class="stat-value" id="precision">--</span>
@@ -78,8 +80,12 @@
         ⚙️ Settings
       </button>
     </footer>
+    <div id="debug-error"
+      style="color: #ff4444; font-size: 10px; margin-top: 10px; padding: 5px; background: rgba(0,0,0,0.5); display: none;">
+    </div>
   </div>
 
   <script src="popup.js"></script>
 </body>
+
 </html>
