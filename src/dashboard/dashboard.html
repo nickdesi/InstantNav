@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InstantNav - Dashboard</title>
+    <link rel="stylesheet" href="dashboard.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+
+<body>
+    <div class="dashboard">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <span class="logo-icon">⚡</span>
+                <h1>InstantNav Dashboard</h1>
+            </div>
+            <nav class="nav">
+                <a href="#stats" class="nav-link active">📊 Stats</a>
+                <a href="#settings" class="nav-link">⚙️ Settings</a>
+            </nav>
+        </header>
+
+        <!-- Stats Section -->
+        <main class="main" id="stats">
+            <!-- Summary Cards -->
+            <section class="summary-cards">
+                <div class="card summary-card">
+                    <div class="card-icon">🚀</div>
+                    <div class="card-content">
+                        <span class="card-value" id="total-time-saved">0s</span>
+                        <span class="card-label">Temps total gagné</span>
+                    </div>
+                </div>
+                <div class="card summary-card">
+                    <div class="card-icon">🎯</div>
+                    <div class="card-content">
+                        <span class="card-value" id="precision-rate">--%</span>
+                        <span class="card-label">Précision des prédictions</span>
+                    </div>
+                </div>
+                <div class="card summary-card">
+                    <div class="card-icon">📄</div>
+                    <div class="card-content">
+                        <span class="card-value" id="pages-loaded">0</span>
+                        <span class="card-label">Pages préchargées</span>
+                    </div>
+                </div>
+                <div class="card summary-card">
+                    <div class="card-icon">💾</div>
+                    <div class="card-content">
+                        <span class="card-value" id="ram-usage">-- MB</span>
+                        <span class="card-label">RAM utilisée</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Charts Row -->
+            <section class="charts-row">
+                <div class="card chart-card">
+                    <h2 class="card-title">📈 Temps gagné par jour</h2>
+                    <canvas id="time-chart"></canvas>
+                </div>
+                <div class="card chart-card">
+                    <h2 class="card-title">🎯 Précision des prédictions</h2>
+                    <canvas id="precision-chart"></canvas>
+                </div>
+            </section>
+
+            <!-- Top Sites -->
+            <section class="card top-sites-card">
+                <h2 class="card-title">🏆 Top sites accélérés</h2>
+                <div class="sites-list" id="top-sites">
+                    <!-- Populated by JS -->
+                </div>
+            </section>
+        </main>
+
+        <!-- Settings Section -->
+        <section class="settings-section" id="settings" style="display: none;">
+            <div class="card">
+                <h2 class="card-title">⚙️ Paramètres</h2>
+
+                <div class="setting-group">
+                    <label class="setting-label">
+                        <span>Visual Feedback (Ghost Highlight)</span>
+                        <input type="checkbox" id="visual-feedback-toggle" checked>
+                    </label>
+                </div>
+
+                <div class="setting-group">
+                    <label class="setting-label">
+                        <span>Mode par défaut</span>
+                        <select id="default-mode">
+                            <option value="auto">🤖 Auto</option>
+                            <option value="turbo">🚀 Turbo</option>
+                            <option value="balanced">⚖️ Équilibré</option>
+                            <option value="eco">🔋 Éco</option>
+                        </select>
+                    </label>
+                </div>
+
+                <div class="setting-group">
+                    <button class="btn btn-danger" id="reset-learning">
+                        🗑️ Réinitialiser l'apprentissage
+                    </button>
+                </div>
+
+                <div class="setting-group">
+                    <button class="btn btn-secondary" id="export-data">
+                        📤 Exporter les données
+                    </button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="dashboard.js"></script>
+</body>
+
+</html>
