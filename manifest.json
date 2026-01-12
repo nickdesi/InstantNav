@@ -23,7 +23,8 @@
       ],
       "js": [
         "src/content/tracker.js",
-        "src/content/predictor.js"
+        "src/content/predictor.js",
+        "src/content/motion.js"
       ],
       "run_at": "document_idle"
     }
