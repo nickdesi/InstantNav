@@ -2,10 +2,14 @@
 <html lang="fr">
 
 <head>
+  <script type="module" src="http://localhost:5173/@vite/client"></script>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>InstantNav - Dashboard</title>
-    <link rel="stylesheet" href="dashboard.css">
+  <script type="module" crossorigin src="/src/dashboard/dashboard.js"></script>
+  <link rel="modulepreload" crossorigin href="/modulepreload-polyfill.js">
+  <link rel="stylesheet" crossorigin href="/dashboard.css">
 </head>
 
 <body>
@@ -111,7 +115,6 @@
         </section>
     </div>
 
-    <script type="module" src="dashboard.js"></script>
 </body>
 
 </html>

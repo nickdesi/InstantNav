@@ -4,34 +4,30 @@
   "version": "1.0.0",
   "description": "Navigation quasi-instantanée grâce à la prédiction intelligente des clics",
   "author": "nickdesi",
-  
   "permissions": [
     "storage",
     "tabs",
     "activeTab"
   ],
-  
   "host_permissions": [
     "<all_urls>"
   ],
-  
   "background": {
     "service_worker": "src/background/service-worker.js",
     "type": "module"
   },
-  
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
+      "matches": [
+        "<all_urls>"
+      ],
       "js": [
         "src/content/tracker.js",
-        "src/content/predictor.js",
-        "src/content/visual-feedback.js"
+        "src/content/predictor.js"
       ],
       "run_at": "document_idle"
     }
   ],
-  
   "action": {
     "default_popup": "src/popup/popup.html",
     "default_icon": {
@@ -41,7 +37,6 @@
       "128": "assets/icons/icon-128.png"
     }
   },
-  
   "icons": {
     "16": "assets/icons/icon-16.png",
     "32": "assets/icons/icon-32.png",

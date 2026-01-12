@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <script type="module" src="http://localhost:5173/@vite/client"></script>
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>InstantNav</title>
+  <script type="module" crossorigin src="/src/popup/popup.js"></script>
+  <link rel="modulepreload" crossorigin href="/modulepreload-polyfill.js">
+  <link rel="stylesheet" crossorigin href="/popup.css">
+</head>
+
+<body>
+  <div class="popup-container">
+    <!-- Header -->
+    <header class="popup-header">
+      <div class="logo">
+        <span class="logo-icon">⚡</span>
+        <span class="logo-text">InstantNav</span>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" id="enabled-toggle" checked>
+        <span class="slider"></span>
+      </label>
+    </header>
+
+    <!-- Stats Overview -->
+    <section class="stats-section">
+      <div class="stat-card primary">
+        <span class="stat-icon">🚀</span>
+        <div class="stat-content">
+          <span class="stat-label">Temps gagné aujourd'hui</span>
+          <span class="stat-value" id="time-saved">0.0s</span>
+        </div>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-card">
+          <span class="stat-value" id="precision">--</span>
+          <span class="stat-label">Précision</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-value" id="prefetched">0</span>
+          <span class="stat-label">Pages préchargées</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Mode Selector -->
+    <section class="mode-section">
+      <span class="section-label">Mode actuel</span>
+      <div class="mode-buttons">
+        <button class="mode-btn" data-mode="eco">🔋 Éco</button>
+        <button class="mode-btn" data-mode="balanced">⚖️ Équilibré</button>
+        <button class="mode-btn" data-mode="turbo">🚀 Turbo</button>
+        <button class="mode-btn active" data-mode="auto">🤖 Auto</button>
+      </div>
+    </section>
+
+    <!-- Current Site -->
+    <section class="site-section">
+      <div class="site-info">
+        <span class="site-icon">🌐</span>
+        <span class="site-domain" id="current-domain">--</span>
+      </div>
+      <div class="trust-level">
+        <span class="trust-label">
+          Confiance:
+          <span class="help-icon" title="Aide">❓
+            <span class="tooltip">
+              <strong>⭐ Favori:</strong> Instantané (Prerender)<br>
+              <strong>○ Standard:</strong> Rapide (Prefetch)<br>
+              <strong>🚫 Bloqué:</strong> Désactivé
+            </span>
+          </span>
+        </span>
+        <select id="trust-select">
+          <option value="trusted">⭐ Favori</option>
+          <option value="neutral" selected>○ Standard</option>
+          <option value="untrusted">🚫 Bloqué</option>
+        </select>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="popup-footer">
+      <button class="footer-btn" id="open-dashboard">
+        📈 Voir les stats
+      </button>
+      <button class="footer-btn" id="open-settings">
+        ⚙️ Settings
+      </button>
+    </footer>
+  </div>
+
+</body>
+
+</html>

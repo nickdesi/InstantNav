@@ -4,7 +4,6 @@
  */
 
 const DEFAULT_TRUSTED = [
-    'google.com',
     'github.com',
     'stackoverflow.com',
     'wikipedia.org',
@@ -17,6 +16,17 @@ const KNOWN_TRACKERS = [
     'googlesyndication.com',
     'facebook.net',
     'analytics.google.com'
+];
+
+const BLACKLISTED = [
+    'google.com',
+    'www.google.com',
+    'accounts.google.com',
+    'myaccount.google.com',
+    'recaptcha.net',
+    'bankofamerica.com',
+    'chase.com',
+    'paypal.com'
 ];
 
 class TrustList {
@@ -53,6 +63,11 @@ class TrustList {
 
             // Check known trackers
             if (this._isKnownTracker(domain)) {
+                return 'untrusted';
+            }
+
+            // Check blacklisted (sensitive/rate-limited)
+            if (this._isBlacklisted(domain)) {
                 return 'untrusted';
             }
 
@@ -114,6 +129,12 @@ class TrustList {
     _isKnownTracker(domain) {
         return KNOWN_TRACKERS.some(tracker =>
             domain === tracker || domain.endsWith(`.${tracker}`)
+        );
+    }
+
+    _isBlacklisted(domain) {
+        return BLACKLISTED.some(blocked =>
+            domain === blocked || domain.endsWith(`.${blocked}`)
         );
     }
 
