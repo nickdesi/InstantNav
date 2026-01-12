@@ -11,6 +11,17 @@
 - **Sécurité Avancée** : Blacklist automatique des sites sensibles (Banques, Google) pour éviter les blocages
 - **Respect de la vie privée** : Tout l'apprentissage reste local sur votre appareil
 
+## 🎛️ Guide des Modes
+
+Choisissez le mode adapté à votre usage dans le Dashboard :
+
+| Mode            | Usage recommandé   | Description                                                                                          |
+| :-------------- | :----------------- | :--------------------------------------------------------------------------------------------------- |
+| **🤖 Auto**     | ✅ **Par défaut**  | Ajuste intelligemment la stratégie selon votre batterie et votre réseau. C'est le mode "set and forget". |
+| **🚀 Turbo**    | 🖥️ Desktop / Fibre | Préchargement agressif. Idéal pour une navigation instantanée si vous avez des ressources illimitées.|
+| **⚖️ Équilibré**| 💻 Laptop          | Bon compromis entre rapidité et consommation de ressources.                                          |
+| **🔋 Éco**      | 📱 En déplacement  | Minimaliste. Désactive le Prerendering pour économiser la batterie et la data.                       |
+
 ## 📦 Installation
 
 ### Développement
