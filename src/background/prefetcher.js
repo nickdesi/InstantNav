@@ -154,92 +154,91 @@ export class Prefetcher {
         this.activeSpeculationRules.push({ type, url, timestamp: Date.now() });
         this._saveState();
     }
-}
 
     async _removeOldestRule(tabId) {
-    const oldest = this.activeSpeculationRules.shift();
-    if (!oldest) return;
+        const oldest = this.activeSpeculationRules.shift();
+        if (!oldest) return;
 
-    try {
-        await chrome.scripting.executeScript({
-            target: { tabId },
-            func: (urlToRemove) => {
-                const scripts = document.querySelectorAll('script[type="speculationrules"][data-instantnav]');
-                scripts.forEach(s => {
-                    try {
-                        const content = s.textContent;
-                        if (content.includes(urlToRemove)) {
-                            s.remove();
-                        }
-                    } catch { }
-                });
-            },
-            args: [oldest.url]
-        });
-    } catch (e) {
-        console.warn('[InstantNav] Failed to remove old rule:', e);
-    }
-
-    this.prefetchedUrls.delete(oldest.url);
-}
-
-_injectLinkHint(href, rel) {
-    // This will be injected via content script
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        if (!tabs[0]?.id) return;
-
-        chrome.scripting.executeScript({
-            target: { tabId: tabs[0].id },
-            func: (href, rel) => {
-                // Check if already exists
-                if (document.querySelector(`link[rel="${rel}"][href="${href}"]`)) return;
-
-                const link = document.createElement('link');
-                link.rel = rel;
-                link.href = href;
-                document.head.appendChild(link);
-            },
-            args: [href, rel]
-        });
-    });
-}
-
-_normalize(url) {
-    try {
-        const u = new URL(url);
-        // Remove trailing slash
-        let path = u.pathname;
-        if (path.endsWith('/') && path.length > 1) {
-            path = path.slice(0, -1);
+        try {
+            await chrome.scripting.executeScript({
+                target: { tabId },
+                func: (urlToRemove) => {
+                    const scripts = document.querySelectorAll('script[type="speculationrules"][data-instantnav]');
+                    scripts.forEach(s => {
+                        try {
+                            const content = s.textContent;
+                            if (content.includes(urlToRemove)) {
+                                s.remove();
+                            }
+                        } catch { }
+                    });
+                },
+                args: [oldest.url]
+            });
+        } catch (e) {
+            console.warn('[InstantNav] Failed to remove old rule:', e);
         }
-        return u.origin + path + u.search;
-    } catch {
-        return url;
+
+        this.prefetchedUrls.delete(oldest.url);
     }
-}
 
-_track(url, type) {
-    this.prefetchedUrls.set(this._normalize(url), { type, timestamp: Date.now() });
-    this._saveState();
-}
+    _injectLinkHint(href, rel) {
+        // This will be injected via content script
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+            if (!tabs[0]?.id) return;
 
-wasPrefetched(url) {
-    return this.prefetchedUrls.has(this._normalize(url));
-}
+            chrome.scripting.executeScript({
+                target: { tabId: tabs[0].id },
+                func: (href, rel) => {
+                    // Check if already exists
+                    if (document.querySelector(`link[rel="${rel}"][href="${href}"]`)) return;
 
-getPrefetchType(url) {
-    return this.prefetchedUrls.get(this._normalize(url))?.type;
-}
+                    const link = document.createElement('link');
+                    link.rel = rel;
+                    link.href = href;
+                    document.head.appendChild(link);
+                },
+                args: [href, rel]
+            });
+        });
+    }
 
-clearOldPrefetches(maxAgeMs = 60000) {
-    const now = Date.now();
-    let changed = false;
-    for (const [url, data] of this.prefetchedUrls) {
-        if (now - data.timestamp > maxAgeMs) {
-            this.prefetchedUrls.delete(url);
-            changed = true;
+    _normalize(url) {
+        try {
+            const u = new URL(url);
+            // Remove trailing slash
+            let path = u.pathname;
+            if (path.endsWith('/') && path.length > 1) {
+                path = path.slice(0, -1);
+            }
+            return u.origin + path + u.search;
+        } catch {
+            return url;
         }
     }
-    if (changed) this._saveState();
-}
+
+    _track(url, type) {
+        this.prefetchedUrls.set(this._normalize(url), { type, timestamp: Date.now() });
+        this._saveState();
+    }
+
+    wasPrefetched(url) {
+        return this.prefetchedUrls.has(this._normalize(url));
+    }
+
+    getPrefetchType(url) {
+        return this.prefetchedUrls.get(this._normalize(url))?.type;
+    }
+
+    clearOldPrefetches(maxAgeMs = 60000) {
+        const now = Date.now();
+        let changed = false;
+        for (const [url, data] of this.prefetchedUrls) {
+            if (now - data.timestamp > maxAgeMs) {
+                this.prefetchedUrls.delete(url);
+                changed = true;
+            }
+        }
+        if (changed) this._saveState();
+    }
 }
