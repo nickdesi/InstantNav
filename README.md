@@ -7,8 +7,8 @@
 - **Prédiction intelligente** : Analyse le mouvement du curseur pour anticiper vos clics
 - **Loi de Fitts** : Scoring basé sur la taille et la distance des liens
 - **Speculation Rules API** : Prerendering natif Chrome/Brave pour des pages instantanées
-- **Mode adaptatif** : S'adapte automatiquement à la batterie, réseau et RAM
-- **Visual Feedback** : Highlight subtil des liens en préchargement (optionnel)
+- **Smart Throttling** : S'adapte au réseau (Data Saver), à la batterie et à la vitesse de scroll
+- **Sécurité Avancée** : Blacklist automatique des sites sensibles (Banques, Google) pour éviter les blocages
 - **Respect de la vie privée** : Tout l'apprentissage reste local sur votre appareil
 
 ## 📦 Installation
@@ -44,8 +44,7 @@ src/
 │   └── context-manager.js
 ├── content/             # Scripts injectés
 │   ├── tracker.js       # Suivi curseur 60fps
-│   ├── predictor.js     # Scoring Fitts + intention
-│   └── visual-feedback.js
+│   └── predictor.js     # Scoring Fitts + intention
 ├── popup/               # Interface popup
 ├── dashboard/           # Stats et graphiques
 ├── storage/             # IndexedDB learning
