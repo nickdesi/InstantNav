@@ -154,10 +154,7 @@ class DashboardController {
     }
 
     setupSettings() {
-        // Visual feedback toggle
-        document.getElementById('visual-feedback-toggle').addEventListener('change', (e) => {
-            chrome.storage.local.set({ visualFeedback: e.target.checked });
-        });
+
 
         // Default mode
         document.getElementById('default-mode').addEventListener('change', (e) => {
@@ -191,10 +188,6 @@ class DashboardController {
     async loadSettings() {
         try {
             const result = await chrome.storage.local.get(['visualFeedback', 'prefetchMode']);
-
-            if (result.visualFeedback !== undefined) {
-                document.getElementById('visual-feedback-toggle').checked = result.visualFeedback;
-            }
 
             if (result.prefetchMode) {
                 document.getElementById('default-mode').value = result.prefetchMode;

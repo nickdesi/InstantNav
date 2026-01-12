@@ -5,6 +5,7 @@
 
 import { Prefetcher } from './prefetcher.js';
 import { ContextManager } from './context-manager.js';
+import { trustList } from '../utils/trust-list.js';
 
 class InstantNavService {
     constructor() {
@@ -55,6 +56,8 @@ class InstantNavService {
             if (details.frameId !== 0) return; // Main frame only
 
             const wasPrefetched = this.prefetcher.wasPrefetched(details.url);
+            console.log('[InstantNav] Navigated to:', details.url, 'Was prefetched?', wasPrefetched);
+
             if (wasPrefetched) {
                 this.stats.successfulPredictions++;
                 this._saveStats();
@@ -67,10 +70,20 @@ class InstantNavService {
         let statsUpdated = false;
 
         for (const link of links) {
+            // Check trust list first
+            if (!trustList.canPrefetch(link.url)) continue;
+
             if (link.score >= profile.prerenderThreshold && profile.maxPrerender > 0) {
-                await this.prefetcher.prerender(link.url, tabId);
-                this.stats.totalPrefetches++;
-                statsUpdated = true;
+                if (trustList.canPrerender(link.url)) {
+                    await this.prefetcher.prerender(link.url, tabId);
+                    this.stats.totalPrefetches++;
+                    statsUpdated = true;
+                } else {
+                    // Downgrade to prefetch if prerender not allowed
+                    await this.prefetcher.prefetch(link.url, tabId);
+                    this.stats.totalPrefetches++;
+                    statsUpdated = true;
+                }
             } else if (link.score >= profile.prefetchThreshold && profile.maxPrefetch > 0) {
                 await this.prefetcher.prefetch(link.url, tabId);
                 this.stats.totalPrefetches++;

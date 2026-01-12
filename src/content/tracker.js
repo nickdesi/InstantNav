@@ -121,3 +121,28 @@ window.instantNavTracker = new CursorTracker();
 window.instantNavTracker.start();
 
 console.log('[InstantNav] Cursor Tracker initialized');
+
+// Measure page load metrics for "Time Saved" stat
+function measurePageMetrics() {
+    // Wait for load event to ensure performance data is complete
+    window.addEventListener('load', () => {
+        setTimeout(() => {
+            try {
+                const navEntry = performance.getEntriesByType('navigation')[0];
+                const loadTime = navEntry ? navEntry.loadEventEnd : 0;
+
+                if (loadTime > 0) {
+                    chrome.runtime.sendMessage({
+                        type: 'NAVIGATION_COMPLETE',
+                        url: window.location.href,
+                        loadTime: Math.round(loadTime)
+                    });
+                }
+            } catch (e) {
+                // Ignore errors
+            }
+        }, 0);
+    });
+}
+
+measurePageMetrics();

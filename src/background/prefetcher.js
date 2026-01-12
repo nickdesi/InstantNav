@@ -175,16 +175,30 @@ export class Prefetcher {
         });
     }
 
+    _normalize(url) {
+        try {
+            const u = new URL(url);
+            // Remove trailing slash
+            let path = u.pathname;
+            if (path.endsWith('/') && path.length > 1) {
+                path = path.slice(0, -1);
+            }
+            return u.origin + path + u.search;
+        } catch {
+            return url;
+        }
+    }
+
     _track(url, type) {
-        this.prefetchedUrls.set(url, { type, timestamp: Date.now() });
+        this.prefetchedUrls.set(this._normalize(url), { type, timestamp: Date.now() });
     }
 
     wasPrefetched(url) {
-        return this.prefetchedUrls.has(url);
+        return this.prefetchedUrls.has(this._normalize(url));
     }
 
     getPrefetchType(url) {
-        return this.prefetchedUrls.get(url)?.type;
+        return this.prefetchedUrls.get(this._normalize(url))?.type;
     }
 
     clearOldPrefetches(maxAgeMs = 60000) {
