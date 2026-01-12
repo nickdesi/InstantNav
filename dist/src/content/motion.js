@@ -3,3 +3,4 @@
             navigation: auto;
         }
     `,document.head.appendChild(t),document.documentElement.setAttribute("data-instantnav-motion","true"),console.log("[InstantNav] Motion Flow initialized")})()})();
+//# sourceMappingURL=motion.js.map
