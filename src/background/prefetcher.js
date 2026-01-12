@@ -48,6 +48,11 @@ export class Prefetcher {
         if (this.prefetchedUrls.has(url)) return;
 
         try {
+            // Respect user's data saving preference
+            if (navigator.connection && navigator.connection.saveData) {
+                return;
+            }
+
             // Use Speculation Rules API if available
             await this._addSpeculationRule(tabId, 'prefetch', url);
 
@@ -64,6 +69,11 @@ export class Prefetcher {
         if (this.prefetchedUrls.has(url)) return;
 
         try {
+            // Respect user's data saving preference
+            if (navigator.connection && navigator.connection.saveData) {
+                return;
+            }
+
             // Use Speculation Rules API for prerender
             await this._addSpeculationRule(tabId, 'prerender', url);
 

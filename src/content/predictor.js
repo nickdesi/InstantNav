@@ -14,7 +14,24 @@ class LinkPredictor {
         this.lastBatchTime = 0;
 
         this._setupObserver();
+        this._initBatteryStatus();
         this._scanLinks();
+    }
+
+    async _initBatteryStatus() {
+        if (navigator.getBattery) {
+            try {
+                const battery = await navigator.getBattery();
+                this.isCharging = battery.charging;
+                battery.addEventListener('chargingchange', () => {
+                    this.isCharging = battery.charging;
+                });
+            } catch (e) {
+                this.isCharging = true; // Assume plugged in if error
+            }
+        } else {
+            this.isCharging = true;
+        }
     }
 
     _setupObserver() {
@@ -79,9 +96,28 @@ class LinkPredictor {
     calculateScores(cursorData) {
         const now = performance.now();
 
+        // Dynamic throttling based on environment
+        let currentInterval = BATCH_INTERVAL_MS;
+
+        // 1. Network check
+        if (navigator.connection) {
+            if (navigator.connection.saveData) currentInterval *= 2; // 160ms
+            if (['slow-2g', '2g', '3g'].includes(navigator.connection.effectiveType)) currentInterval *= 1.5; // 120ms
+        }
+
+        // 2. Battery check (if API available)
+        if (navigator.getBattery && !this.isCharging) {
+            currentInterval *= 1.25; // 100ms
+        }
+
         // Throttle heavy calculations
-        if (now - this.lastBatchTime < BATCH_INTERVAL_MS) return;
+        if (now - this.lastBatchTime < currentInterval) return;
         this.lastBatchTime = now;
+
+        // Skip calculations if user is scrolling fast (high noise)
+        if (window.instantNavTracker && window.instantNavTracker.scrollSpeed > 100) {
+            return;
+        }
 
         // Refresh link positions if viewport changed
         this._scanLinks();
