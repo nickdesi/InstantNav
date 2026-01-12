@@ -229,6 +229,44 @@ body {
   cursor: pointer;
 }
 
+/* Help Tooltip */
+.help-icon {
+  margin-left: 4px;
+  font-size: 10px;
+  cursor: help;
+  position: relative;
+  opacity: 0.7;
+}
+
+.help-icon .tooltip {
+  visibility: hidden;
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1a1a2e;
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  padding: 8px;
+  border-radius: 6px;
+  width: 180px;
+  font-size: 10px;
+  line-height: 1.4;
+  z-index: 10;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  margin-bottom: 5px;
+  color: #e8e8e8;
+  font-weight: normal;
+  text-align: left;
+}
+
+.help-icon:hover .tooltip {
+  visibility: visible;
+}
+
+.help-icon .tooltip strong {
+  color: #a855f7;
+}
+
 /* Footer */
 .popup-footer {
   display: grid;
