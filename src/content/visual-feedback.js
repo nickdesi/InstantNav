@@ -90,9 +90,9 @@ class VisualFeedback {
         }
 
         // Position overlay
-        overlay.style.position = 'fixed';
-        overlay.style.top = `${rect.top - 2}px`;
-        overlay.style.left = `${rect.left - 2}px`;
+        overlay.style.position = 'absolute';
+        overlay.style.top = `${rect.top + window.scrollY - 2}px`;
+        overlay.style.left = `${rect.left + window.scrollX - 2}px`;
         overlay.style.width = `${rect.width + 4}px`;
         overlay.style.height = `${rect.height + 4}px`;
 
@@ -109,8 +109,8 @@ class VisualFeedback {
         const rect = element.getBoundingClientRect();
 
         // Update position
-        overlay.style.top = `${rect.top - 2}px`;
-        overlay.style.left = `${rect.left - 2}px`;
+        overlay.style.top = `${rect.top + window.scrollY - 2}px`;
+        overlay.style.left = `${rect.left + window.scrollX - 2}px`;
         overlay.style.width = `${rect.width + 4}px`;
         overlay.style.height = `${rect.height + 4}px`;
 
