@@ -80,10 +80,11 @@ src/
 
 ## 🔒 Vie privée
 
-- Aucune donnée envoyée à l'extérieur
-- Apprentissage 100% local (IndexedDB)
-- Données automatiquement supprimées après 30 jours
-- Sites "untrusted" : seulement DNS prefetch
+- **Aucune donnée envoyée** : Tout reste sur votre machine.
+- **Stockage Local** : L'apprentissage est stocké dans votre navigateur (IndexedDB) et jamais partagé.
+- **Nettoyage Automatique** : Les données de navigation sont supprimées après 30 jours.
+- **Protection Anti-Trackers** : Les sites publicitaires et de tracking sont automatiquement exclus du préchargement.
+- **Liste de Confiance** : Par défaut, seuls les sites sûrs et votre propre historique sont préchargés agressivement.
 
 ## 📄 Licence
 
