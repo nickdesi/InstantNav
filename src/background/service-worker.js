@@ -42,6 +42,26 @@ class InstantNavService {
                     this.contextManager.setMode(message.mode);
                     break;
 
+                case 'GET_HISTORY_SCORE':
+                    // Check history for this URL
+                    chrome.history.getVisits({ url: message.url }, (visits) => {
+                        // Calculate score based on visit count and recency
+                        const visitCount = visits.length;
+                        let score = 40; // Default
+                        
+                        if (visitCount > 0) {
+                            score = Math.min(90, 40 + (visitCount * 5));
+                            // Boost if visited recently (last 24h)
+                            const lastVisit = visits[visits.length - 1].visitTime;
+                            const now = Date.now();
+                            if (now - lastVisit < 86400000) {
+                                score += 10;
+                            }
+                        }
+                        sendResponse({ score: Math.min(100, score) });
+                    });
+                    return true; // Keep channel open for async response
+
                 case 'NAVIGATION_COMPLETE':
                     this._trackSuccessfulPrediction(message.url, message.loadTime);
                     break;
@@ -56,9 +76,8 @@ class InstantNavService {
             if (details.frameId !== 0) return; // Main frame only
 
             const wasPrefetched = this.prefetcher.wasPrefetched(details.url);
-            console.log('[InstantNav] Navigated to:', details.url, 'Was prefetched?', wasPrefetched);
-
             if (wasPrefetched) {
+                console.log('[InstantNav] Successful prediction for:', details.url);
                 this.stats.successfulPredictions++;
                 this._saveStats();
             }
@@ -73,7 +92,9 @@ class InstantNavService {
             // Check trust list first
             if (!trustList.canPrefetch(link.url)) continue;
 
-            if (link.score >= profile.prerenderThreshold && profile.maxPrerender > 0) {
+            const score = link.score;
+            
+            if (score >= profile.prerenderThreshold && profile.maxPrerender > 0) {
                 if (trustList.canPrerender(link.url)) {
                     await this.prefetcher.prerender(link.url, tabId);
                     this.stats.totalPrefetches++;
@@ -84,13 +105,13 @@ class InstantNavService {
                     this.stats.totalPrefetches++;
                     statsUpdated = true;
                 }
-            } else if (link.score >= profile.prefetchThreshold && profile.maxPrefetch > 0) {
+            } else if (score >= profile.prefetchThreshold && profile.maxPrefetch > 0) {
                 await this.prefetcher.prefetch(link.url, tabId);
                 this.stats.totalPrefetches++;
                 statsUpdated = true;
-            } else if (link.score >= profile.preconnectThreshold) {
+            } else if (score >= profile.preconnectThreshold) {
                 await this.prefetcher.preconnect(link.url);
-            } else if (link.score >= 30) {
+            } else if (score >= 30) {
                 await this.prefetcher.dnsPrefetch(link.url);
             }
         }

@@ -8,14 +8,15 @@ const BATCH_INTERVAL_MS = 80;
 
 class LinkPredictor {
     constructor() {
-        this.links = [];
+        this.links = new Map(); // element -> { url, rect, isVisible, score }
         this.scores = new Map(); // URL -> { score, timestamp }
         this.graceTimers = new Map(); // URL -> timeout
+        this.historyCache = new Map(); // URL -> score
         this.lastBatchTime = 0;
 
         this._setupObserver();
         this._initBatteryStatus();
-        this._scanLinks();
+        this._setupIntersectionObserver();
     }
 
     async _initBatteryStatus() {
@@ -36,43 +37,80 @@ class LinkPredictor {
 
     _setupObserver() {
         // Watch for DOM changes to detect new links
-        const observer = new MutationObserver(() => {
-            this._scanLinks();
+        const observer = new MutationObserver((mutations) => {
+            let shouldScan = false;
+            for (const mutation of mutations) {
+                if (mutation.addedNodes.length > 0 || mutation.removedNodes.length > 0) {
+                    shouldScan = true;
+                    break;
+                }
+            }
+            if (shouldScan) this._scanLinks();
         });
 
         observer.observe(document.body, {
             childList: true,
             subtree: true
         });
+
+        // Initial scan
+        this._scanLinks();
+    }
+
+    _setupIntersectionObserver() {
+        this.intersectionObserver = new IntersectionObserver((entries) => {
+            for (const entry of entries) {
+                const linkData = this.links.get(entry.target);
+                if (linkData) {
+                    linkData.isVisible = entry.isIntersecting;
+                    if (entry.isIntersecting) {
+                        linkData.rect = entry.boundingClientRect;
+                    }
+                }
+            }
+        }, { threshold: 0 });
     }
 
     _scanLinks() {
-        this.links = Array.from(document.querySelectorAll('a[href]'))
-            .filter(link => {
-                const href = link.getAttribute('href');
-                return href &&
-                    !href.startsWith('#') &&
-                    !href.startsWith('javascript:') &&
-                    !href.startsWith('mailto:');
-            })
-            .map(link => ({
-                element: link,
-                url: link.href,
-                rect: link.getBoundingClientRect(),
-                isVisible: this._isVisible(link)
-            }));
-    }
+        // Disconnect old elements to prevent leaks
+        // In a clear implementation we might want to be more granular, 
+        // but for now re-scanning ensures we catch everything.
+        // Optimization: simple diffing could be better but complexity increases.
 
-    _isVisible(element) {
-        const rect = element.getBoundingClientRect();
-        return (
-            rect.top >= 0 &&
-            rect.left >= 0 &&
-            rect.bottom <= window.innerHeight &&
-            rect.right <= window.innerWidth &&
-            rect.width > 0 &&
-            rect.height > 0
-        );
+        const anchors = document.querySelectorAll('a[href]');
+
+        // Mark current links
+        const currentElements = new Set(anchors);
+
+        // Remove old links
+        for (const [element, data] of this.links) {
+            if (!currentElements.has(element)) {
+                this.intersectionObserver.unobserve(element);
+                this.links.delete(element);
+            }
+        }
+
+        // Add new links
+        for (const anchor of anchors) {
+            if (this.links.has(anchor)) continue;
+
+            const href = anchor.getAttribute('href');
+            if (!href || href.startsWith('#') || href.startsWith('javascript:') || href.startsWith('mailto:')) continue;
+
+            const data = {
+                element: anchor,
+                url: anchor.href,
+                rect: anchor.getBoundingClientRect(),
+                isVisible: false, // Will be updated by IntersectionObserver
+                score: 0
+            };
+
+            this.links.set(anchor, data);
+            this.intersectionObserver.observe(anchor);
+
+            // Prefetch history score
+            this._fetchHistoryScore(anchor.href);
+        }
     }
 
     /**
@@ -119,22 +157,34 @@ class LinkPredictor {
             return;
         }
 
-        // Refresh link positions if viewport changed
-        this._scanLinks();
+        // NO rescanning here - delegated into MutationObserver
 
         const results = [];
 
-        for (const link of this.links) {
-            if (!link.isVisible) continue;
+        for (const [element, data] of this.links) {
+            if (!data.isVisible) continue;
 
-            const rect = link.rect;
+            const rect = data.rect; // Used cached rect from IntersectionObserver or update here if needed? 
+            // Better to re-read rect ONLY on mouse move if we want high precision, 
+            // but reading rect forces reflow. 
+            // IntersectionObserver gives rect, but it might be stale if element moved without scrolling.
+            // For high perf, we avoid getBoundingClientRect here if possible, but for Fitts we need it.
+            // Let's rely on cached rect but maybe update it less frequently? 
+            // Actually, getBoundingClientRect is unavoidable for precise Fitts. 
+            // But we can limit it to elements strictly near cursor?
+            // For now, sticking to logic but on filtered list.
+
+            // Optimization: if distance > 500px, skip precise calc?
             const centerX = rect.left + rect.width / 2;
             const centerY = rect.top + rect.height / 2;
 
-            // Distance from cursor to link center
             const dx = centerX - cursorData.position.x;
             const dy = centerY - cursorData.position.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
+            const distanceSq = dx * dx + dy * dy;
+
+            if (distanceSq > 250000) continue; // > 500px away, ignore
+
+            const distance = Math.sqrt(distanceSq);
 
             // 1. Fitts Score (30%)
             const fittsScore = this._calculateFittsScore(distance, rect.width, rect.height);
@@ -148,10 +198,10 @@ class LinkPredictor {
             const proximityScore = Math.max(0, 100 - (distance / maxDistance) * 100);
 
             // 4. Context Score (10%) - prioritize main content over footer/sidebar
-            const contextScore = this._getContextScore(link.element);
+            const contextScore = this._getContextScore(element);
 
-            // 5. History Score (15%) - placeholder for learning engine
-            const historyScore = this._getHistoryScore(link.url);
+            // 5. History Score (15%)
+            const historyScore = this._getHistoryScore(data.url);
 
             // Weighted total
             const totalScore =
@@ -162,29 +212,33 @@ class LinkPredictor {
                 historyScore * 0.15;
 
             // Apply grace period boost if cursor stopped near link
-            const graceBoost = this._getGraceBoost(link.url, totalScore, cursorData);
+            const graceBoost = this._getGraceBoost(data.url, totalScore, cursorData);
             const finalScore = Math.min(100, totalScore + graceBoost);
 
-            this.scores.set(link.url, {
-                score: finalScore,
-                timestamp: now,
-                breakdown: { fittsScore, intentionScore, proximityScore, contextScore, historyScore }
-            });
+            data.score = finalScore;
 
-            results.push({
-                url: link.url,
-                element: link.element,
-                score: finalScore
-            });
+            if (finalScore > 30) { // Only track meaningful scores
+                this.scores.set(data.url, {
+                    score: finalScore,
+                    timestamp: now,
+                    breakdown: { fittsScore, intentionScore, proximityScore, contextScore, historyScore }
+                });
+
+                results.push({
+                    url: data.url,
+                    element: element,
+                    score: finalScore
+                });
+            }
         }
 
         // Sort by score descending
         results.sort((a, b) => b.score - a.score);
 
         // Notify prefetcher with top candidates
-        this._notifyPrefetcher(results.slice(0, 5));
-
-
+        if (results.length > 0) {
+            this._notifyPrefetcher(results.slice(0, 5));
+        }
 
         return results;
     }
@@ -204,14 +258,26 @@ class LinkPredictor {
     }
 
     _getHistoryScore(url) {
-        // Placeholder - will be enhanced by Learning Engine
-        // For now, give slight boost to same-domain links
+        if (this.historyCache.has(url)) {
+            return this.historyCache.get(url);
+        }
+        return 40; // Default until loaded
+    }
+
+    _fetchHistoryScore(url) {
+        if (this.historyCache.has(url)) return;
+
+        // Default entry to prevent multiple fetches
+        this.historyCache.set(url, 40);
+
         try {
-            const linkDomain = new URL(url).hostname;
-            const currentDomain = window.location.hostname;
-            return linkDomain === currentDomain ? 60 : 40;
-        } catch {
-            return 40;
+            chrome.runtime.sendMessage({ type: 'GET_HISTORY_SCORE', url }, (response) => {
+                if (response && response.score) {
+                    this.historyCache.set(url, response.score);
+                }
+            });
+        } catch (e) {
+            // Ignore context invalidated errors
         }
     }
 
